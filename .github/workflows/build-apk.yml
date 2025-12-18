@@ -2,7 +2,6 @@ name: Build Android APK (Legacy)
 
 on:
   push:
-    branches: [ "master" ]
   workflow_dispatch:
 
 jobs:
@@ -10,35 +9,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 8
+      # Java 17 ONLY for Android SDK tools
+      - name: Set up JDK 17 (for SDK tools)
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '8'
+          distribution: temurin
+          java-version: 17
 
-      - name: Set up Android SDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        env:
+          SKIP_JDK_VERSION_CHECK: true
 
-      - name: Accept Android licenses
-        run: yes | sdkmanager --licenses
+      # Switch back to Java 8 for Gradle build
+      - name: Set up JDK 8 (for Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 8
 
-      - name: Install required SDK packages
-        run: |
-          sdkmanager "platform-tools" \
-                     "platforms;android-21" \
-                     "build-tools;21.1.2"
-
-      - name: Grant execute permission for Gradle
+      - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Clip-Stack-Plus-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/*.apk
