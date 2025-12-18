@@ -10,22 +10,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout source
+      # 1. Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Use Java 8 (MANDATORY for Gradle 2.2.1)
-      - name: Set up JDK 8
+      # 2. Java 17 (ONLY for sdkmanager)
+      - name: Set up JDK 17 (SDK tools only)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 8
+          java-version: 17
 
       # 3. Setup Android SDK
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      # 4. Install REQUIRED legacy SDK components
+      # 4. Install legacy SDK components
       - name: Install Android SDK 22
         run: |
           yes | sdkmanager --licenses
@@ -33,15 +33,22 @@ jobs:
             "platforms;android-22" \
             "build-tools;22.0.1"
 
-      # 5. Ensure gradlew is executable
+      # 5. Switch to Java 8 (MANDATORY for Gradle 2.2.1)
+      - name: Switch to JDK 8 (Gradle build)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 8
+
+      # 6. Grant gradlew permission
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      # 6. Build Debug APK
-      - name: Build APK
+      # 7. Build APK
+      - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      # 7. Upload APK artifact
+      # 8. Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
